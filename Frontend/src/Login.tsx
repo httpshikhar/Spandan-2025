@@ -16,6 +16,7 @@ interface LoginResponse {
   user: {
     _id: string;
     pid: string;
+    fullName: string;
   };
 }
 
@@ -34,39 +35,41 @@ const Login: React.FC = () => {
   };
 
   const submit = async () => {
+    const API = import.meta.env.VITE_BACKEND_URL;
+
+    if (!values.email || !values.password) {
+      toast('All fields are mandatory', {
+        type: 'error',
+        position: 'top-center',
+        theme: 'light',
+        autoClose: 4000,
+      });
+      return;
+    }
+
     try {
-      if (values.email === '' || values.password === '') {
-        toast('All fields are mandatory', {
-          type: 'error',
-          position: 'top-center',
-          theme: 'light',
-          autoClose: 4000,
-        });
-      } else {
-        const res = await axios.post<LoginResponse>(
-          'http://localhost:3000/api/v2/user/login',
-          values,
-          { withCredentials: true }
-        );
+      const res = await axios.post<LoginResponse>(
+        `${API}/api/v2/user/login`,
+        values,
+        { withCredentials: true }
+      );
 
-        dispatch(authActions.login());
-        localStorage.setItem('id', res.data.user._id);
-        localStorage.setItem('token', res.data.token);
-        localStorage.setItem('Pid', res.data.user.pid);
-        localStorage.setItem('user',res.data.user.fullName);
+      dispatch(authActions.login());
+      localStorage.setItem('id', res.data.user._id);
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('Pid', res.data.user.pid);
+      localStorage.setItem('user', res.data.user.fullName);
 
-        toast(res.data.message, {
-          type: 'success',
-          position: 'top-center',
-          theme: 'light',
-          autoClose: 5000,
-        });
+      toast(res.data.message, {
+        type: 'success',
+        position: 'top-center',
+        theme: 'light',
+        autoClose: 5000,
+      });
 
-        navigate('/events');
-      }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      navigate('/events');
     } catch (err: any) {
-      console.error(err?.response?.data?.message);
+      console.error(err?.response?.data?.message || err.message);
       toast(err?.response?.data?.message || 'Login failed', {
         type: 'error',
         position: 'top-center',
@@ -90,7 +93,7 @@ const Login: React.FC = () => {
               Email
             </label>
             <input
-              type="text"
+              type="email"
               placeholder="Enter your email"
               className="w-full mt-2 bg-slate-900 p-2 text-white rounded-lg outline-none"
               name="email"
@@ -130,7 +133,7 @@ const Login: React.FC = () => {
         <div className="mt-6">
           <span className="flex justify-center font-semibold text-white">Or</span>
           <p className="flex justify-center mt-4 text-white font-semibold">
-            Don't have an account?&nbsp;
+            Don&apos;t have an account?&nbsp;
             <a
               className="text-blue-500 font-bold hover:text-blue-700 hover:underline"
               href="/Signup"
